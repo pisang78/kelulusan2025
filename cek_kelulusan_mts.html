@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cek Kelulusan MTS</title>
+</head>
+<body>
+  <div style="padding: 20px; max-width: 500px; margin: auto;">
+    <h3>CEK KELULUSAN</h3>
+    <input 
+      type="text" 
+      id="nisnInput" 
+      placeholder="Masukkan NISN 10 digit"
+      style="padding: 8px; width: 70%;" 
+      maxlength="10"
+    >
+    <button 
+      onclick="checkNISN()"
+      style="padding: 8px 15px; background: #4285f4; color: white; border: none; cursor: pointer;"
+    >
+      Cek
+    </button>
+    <div id="result" style="margin-top: 20px;"></div>
+  </div>
+
+  <script>
+  function checkNISN() {
+    const nisn = document.getElementById('nisnInput').value.trim();
+    const resultDiv = document.getElementById('result');
+    
+    if (!nisn) {
+      resultDiv.innerHTML = '<p style="color:red;">Harap masukkan NISN</p>';
+      return;
+    }
+    
+    if (!/^\d{10}$/.test(nisn)) {
+      resultDiv.innerHTML = '<p style="color:red;">NISN harus terdiri dari 10 digit angka</p>';
+      return;
+    }
+  
+    resultDiv.innerHTML = '<p>Memeriksa data...</p>';
+  
+    fetch(`https://script.google.com/macros/s/AKfycbxugmV-TZSPa0b401BCZARZhJMQ-Pzq3C4gngYzxZNTj9C1PL6SduCFzmhv0FQVz-q0/exec?nisn=${encodeURIComponent(nisn)}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+  
+        if (data.status === "found") {
+          resultDiv.innerHTML = `
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+              <h4>HASIL KELULUSAN</h4>
+              <p><b>NISN:</b> ${nisn}</p>
+              <p><b>Nama:</b> ${data.nama}</p>
+              <p><b>Status:</b> 
+                <span style="color:${data.kelulusan === 'LULUS' ? 'green' : 'red'};">
+                  ${data.kelulusan}
+                </span>
+              </p>
+              <p><b>Sisa pencarian:</b> ${data.attempts_remaining}/5</p>
+            </div>
+          `;
+        } else if (data.status === "error") {
+          resultDiv.innerHTML = `<p style="color:red;">${data.message}</p>`;
+        } else {
+          resultDiv.innerHTML = `<p style="color:red;">NISN tidak ditemukan (Sisa percobaan: ${data.attempts_remaining}/5)</p>`;
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        resultDiv.innerHTML = '<p style="color:red;">Terjadi kesalahan, monggo coba lagi</p>';
+      });
+  }
+  </script>
+</body>
+</html>
